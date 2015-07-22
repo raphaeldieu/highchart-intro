@@ -1,61 +1,68 @@
 $(document).ready(function(){
-  //Class
-  var HighCharts = function(){
-    this.graphData = [];
-  };
-
-  HighCharts.prototype.makeAjaxRequest = function() {
+  var Chart = function(){
+    this.data = [];
+  }
+  var name;
+  var code;
+  
+  Chart.prototype.getData = function(url){
     $.ajax({
-      context : this,
+      context: this,
       type : 'GET',
-      url: 'https://www.quandl.com/api/v1/datasets/BTS_MM/RETAILGAS.json?auth_token=E6kNzExHjay2DNP8pKvB',
+      url : url,
       success : function(response){
+        console.log(response);
+        var items = response.data.sort()
+        name = response.name;
+        code = response.code;
         
-        //DATA WRANGLING  
-        var items = response.data.sort();//To avoid error you need to sort the data;
-
-        for (var i=0; i < items.length; i++){
-          item = items[i];
-          this.graphData.push({
-            x: new Date(item[0]),
-            y: item[1] 
+        for (var i = 0; i < response.data.length; i++){
+          this.data.push({
+            x : new Date(items[i][0]),
+            y : items[i][1]
           })
-        }
-
-        console.log(this.graphData);
-        this.graph();
+        };
+      console.log(this.data);
+      this.drawGraph();
       }
     });
   };
-
-  //DRAWING THE GRAPH
-  HighCharts.prototype.graph = function(){
-     var highchartConfig = {
+  
+  Chart.prototype.drawGraph = function(){
+    var highchartConfig = {
       title: {
-        text: 'Average retail gas prices'
-      },
-      subtitle: {
-        text: 'Bureau of Transportation Statistics (Multimodal)'
+        text: "Currencies exchange rate vs HKD"
       },
       xAxis: {
         type: 'datetime'
       },
-      series: [
+      series:[
         {
-          name: 'US',
-          data: this.graphData
+          name: code,
+          data: this.data,
+          turboThreshold: 0
         }
       ]
-    };
-
+    }
     $('#chart').highcharts(highchartConfig);
-  }
+  };
 
 
-  //Instance
-  var chart = new HighCharts();
+  $('#input_url').submit(function(){
+  event.preventDefault();
+  })
 
-  chart.makeAjaxRequest();
+// 'https://www.quandl.com/api/v1/datasets/ECB/EURHKD.json';
 
-});
+  var chart = new Chart();
 
+  var url;
+  
+  $('#go').click(function(){
+    url = $('#url').val();
+    chart.getData(url);
+    console.log(url);
+  });
+  
+
+})
